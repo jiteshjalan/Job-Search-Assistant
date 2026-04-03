@@ -70,7 +70,7 @@ export default function CVBuilder({ job, onClose }: Props) {
   const [stageReveal, setStageReveal] = useState<0 | 1 | 2 | 3>(0);
   const [edits,       setEdits]       = useState<Record<string, string>>({});
   const [error,       setError]       = useState('');
-  const [copied,      setCopied]      = useState(false);
+  const [fullscreen,  setFullscreen]  = useState(false);
 
   // Read CV from localStorage once on mount
   useEffect(() => {
@@ -159,16 +159,6 @@ export default function CVBuilder({ job, onClose }: Props) {
   // Actions
   // ---------------------------------------------------------------------------
 
-  function handleCopyLinkedIn() {
-    const text = (result?.sections ?? [])
-      .map((s) => edits[s.id] ?? stripMarkdown(s.optimised))
-      .join('\n\n');
-    navigator.clipboard.writeText(text).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }
-
   function handleDownloadPDF() {
     const sections = result?.sections ?? [];
     const bodyHTML = sections
@@ -206,18 +196,6 @@ export default function CVBuilder({ job, onClose }: Props) {
       win.document.close();
       win.print();
     }
-  }
-
-  function handleAttachEmail() {
-    const sections = result?.sections ?? [];
-    const body = sections
-      .map((s) => `${s.title}\n${edits[s.id] ?? stripMarkdown(s.optimised)}`)
-      .join('\n\n')
-      .slice(0, 1500);
-
-    const subject = encodeURIComponent(`CV for ${job.title} at ${job.company}`);
-    const encodedBody = encodeURIComponent(body);
-    window.location.href = `mailto:?subject=${subject}&body=${encodedBody}`;
   }
 
   // ---------------------------------------------------------------------------
@@ -351,11 +329,21 @@ export default function CVBuilder({ job, onClose }: Props) {
 
         {/* Right: optimised sections */}
         <div className="flex-1 flex flex-col min-h-0">
-          <div className="flex-shrink-0 flex items-center gap-2 px-4 py-2 border-b border-white/[0.05] bg-[#141414]">
-            <span className="text-[12px] font-medium text-indigo-400">Optimised</span>
-            <span className="text-[10px] text-indigo-400/60 bg-indigo-500/10 border border-indigo-500/20 px-1.5 py-0.5 rounded">
-              editable
-            </span>
+          <div className="flex-shrink-0 flex items-center justify-between px-4 py-2 border-b border-white/[0.05] bg-[#141414]">
+            <div className="flex items-center gap-2">
+              <span className="text-[12px] font-medium text-indigo-400">Optimised</span>
+              <span className="text-[10px] text-indigo-400/60 bg-indigo-500/10 border border-indigo-500/20 px-1.5 py-0.5 rounded">
+                editable
+              </span>
+            </div>
+            <button
+              onClick={() => setFullscreen(true)}
+              title="Expand fullscreen"
+              className="cursor-pointer text-[#555] hover:text-indigo-400 transition-colors text-[14px] leading-none"
+              aria-label="Expand fullscreen"
+            >
+              ⤢
+            </button>
           </div>
           <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
             {sections.map((section) => {
@@ -416,18 +404,67 @@ export default function CVBuilder({ job, onClose }: Props) {
         >
           Download PDF
         </button>
-        <button
-          onClick={handleAttachEmail}
-          className="cursor-pointer px-3 py-2 rounded-lg bg-white/[0.06] hover:bg-white/[0.10] text-[#c0c0c0] text-[13px] font-medium transition-colors border border-white/[0.08]"
-        >
-          Attach to Email
-        </button>
-        <button
-          onClick={handleCopyLinkedIn}
-          className="cursor-pointer px-3 py-2 rounded-lg bg-violet-700 hover:bg-violet-600 text-white text-[13px] font-medium transition-colors"
-        >
-          {copied ? '✓ Copied' : 'Copy LinkedIn'}
-        </button>
+      </div>
+    );
+  }
+
+  function renderFullscreenModal() {
+    if (!fullscreen || !result) return null;
+    const sections = result.sections ?? [];
+    return (
+      <div className="fixed inset-0 z-[70] flex flex-col bg-[#0f0f0f]">
+        {/* Fullscreen header */}
+        <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b border-white/[0.08]">
+          <div>
+            <p className="text-[13px] font-semibold text-indigo-400">Optimised CV — Fullscreen</p>
+            <p className="text-[11px] text-[#555] mt-0.5">{job.title} · {job.company}</p>
+          </div>
+          <button
+            onClick={() => setFullscreen(false)}
+            className="cursor-pointer text-[#555] hover:text-[#aaa] transition-colors text-[18px] leading-none"
+            aria-label="Close fullscreen"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Scrollable content */}
+        <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6">
+          {sections.map((section) => {
+            const currentEdit = edits[section.id] ?? stripMarkdown(section.optimised);
+            return (
+              <div key={section.id} className="space-y-2">
+                <p className="text-[11px] font-semibold text-[#888] uppercase tracking-wider">
+                  {section.title}
+                </p>
+                <textarea
+                  value={currentEdit}
+                  onChange={(e) =>
+                    setEdits((prev) => ({ ...prev, [section.id]: e.target.value }))
+                  }
+                  className="rounded-lg bg-white/[0.025] border border-indigo-500/20 focus:border-indigo-500/40 focus:outline-none px-4 py-3 text-[13px] text-[#c0c0c0] leading-relaxed whitespace-pre-wrap resize-none w-full"
+                  rows={Math.max(4, currentEdit.split('\n').length + 1)}
+                />
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Fullscreen bottom bar */}
+        <div className="flex-shrink-0 border-t border-white/[0.08] px-6 py-3 grid grid-cols-2 gap-3">
+          <button
+            onClick={handleAcceptChanges}
+            className="cursor-pointer px-4 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[13px] font-medium transition-colors"
+          >
+            Accept Changes
+          </button>
+          <button
+            onClick={handleDownloadPDF}
+            className="cursor-pointer px-4 py-2.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.10] text-[#c0c0c0] text-[13px] font-medium transition-colors border border-white/[0.08]"
+          >
+            Download PDF
+          </button>
+        </div>
       </div>
     );
   }
@@ -439,6 +476,7 @@ export default function CVBuilder({ job, onClose }: Props) {
   if (phase === 'idle') return null;
 
   return (
+    <>
     <div className="fixed inset-y-0 right-0 w-[680px] max-w-full z-50 flex flex-col bg-[#141414] border-l border-white/[0.08] shadow-2xl">
       {/* Header */}
       <div className="flex-shrink-0 flex items-start justify-between px-5 py-4 border-b border-white/[0.08]">
@@ -513,5 +551,9 @@ export default function CVBuilder({ job, onClose }: Props) {
       {/* Bottom action bar */}
       {renderBottomBar()}
     </div>
+
+    {/* Fullscreen modal */}
+    {renderFullscreenModal()}
+    </>
   );
 }

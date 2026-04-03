@@ -310,6 +310,7 @@ export default function DashboardPage() {
               title:   entry.title,
               url:     entry.jobUrl ?? '',
               status:  KANBAN_STATUS_MAP[col],
+              score:   entry.totalScore,
             }),
           }).catch(() => {});
         }

@@ -83,49 +83,6 @@ function textToBase64(str: string): string {
   return btoa(binary);
 }
 
-// Move job to Kanban outreachSent column + mark as tracked in job universe
-function markJobOutreachSent(job: ScoredJob) {
-  try {
-    // Update kanban
-    const kanban = JSON.parse(localStorage.getItem('jsa_kanban') ?? '{}') as Record<string, unknown[]>;
-    if (!kanban.outreachSent) kanban.outreachSent = [];
-    const alreadyIn = Object.values(kanban).flat().some(
-      (e) => (e as { jobId?: string }).jobId === job.id,
-    );
-    if (!alreadyIn) {
-      (kanban.outreachSent as unknown[]).push({
-        jobId: job.id,
-        jobTitle: job.title,
-        company: job.company,
-        addedAt: new Date().toISOString(),
-        history: [{ status: 'outreachSent', date: new Date().toISOString() }],
-      });
-      localStorage.setItem('jsa_kanban', JSON.stringify(kanban));
-    }
-    // Mark as applied in universe so JobUniversePanel filters it out
-    const universe = JSON.parse(localStorage.getItem('jsa_job_universe') ?? '[]') as { id: string; status?: string }[];
-    const updatedUniverse = universe.map((j) =>
-      j.id === job.id ? { ...j, status: 'applied' } : j,
-    );
-    localStorage.setItem('jsa_job_universe', JSON.stringify(updatedUniverse));
-
-    // Sync to Google Sheets (fire-and-forget)
-    fetch('/api/track-application', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        jobId:   job.id,
-        company: job.company,
-        title:   job.title,
-        url:     job.url ?? '',
-        status:  'Outreach Sent',
-      }),
-    }).catch(() => {});
-  } catch {
-    // Non-critical
-  }
-}
-
 export default function OutreachPanel({ job, onClose }: Props) {
   const [tab, setTab] = useState<Tab>('email');
   const [loadingContacts, setLoadingContacts] = useState(false);
@@ -288,10 +245,6 @@ export default function OutreachPanel({ job, onClose }: Props) {
         setGmailAuthUrl(data.authUrl);
       } else if (data.results) {
         setSendResults((prev) => ({ ...prev, [contactId]: data.results! }));
-        // If any address succeeded, move job to kanban + remove from universe
-        if (data.results.some((r) => r.success)) {
-          markJobOutreachSent(job);
-        }
       } else {
         setSendResults((prev) => ({
           ...prev,

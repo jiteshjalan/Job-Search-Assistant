@@ -13,11 +13,14 @@ interface Props {
   onInterview: () => void;
 }
 
-const DIM_CFG: Record<string, { label: string; bar: string }> = {
-  roleProfileFit:         { label: 'Role & Profile Fit',         bar: '#6366f1' },
-  companyStageTrajectory: { label: 'Company Stage & Trajectory', bar: '#8b5cf6' },
-  networkProximity:       { label: 'Network Proximity',          bar: '#3b82f6' },
-  outreachROI:            { label: 'Outreach ROI',               bar: '#06b6d4' },
+const DIM_CFG: Record<string, { label: string; bar: string; weight: number }> = {
+  functionalFit:       { label: 'Functional Fit',       bar: '#6366f1', weight: 0.25 },
+  capabilitySignals:   { label: 'Capability Signals',   bar: '#8b5cf6', weight: 0.20 },
+  requirementMatch:    { label: 'Requirement Match',    bar: '#3b82f6', weight: 0.15 },
+  archetypeFit:        { label: 'Archetype Fit',        bar: '#06b6d4', weight: 0.15 },
+  environmentMatch:    { label: 'Environment Match',    bar: '#10b981', weight: 0.10 },
+  trajectoryNarrative: { label: 'Trajectory Narrative', bar: '#f59e0b', weight: 0.10 },
+  strategicAlignment:  { label: 'Strategic Alignment',  bar: '#f43f5e', weight: 0.05 },
 };
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -200,15 +203,15 @@ export default function JobDrawer({ job, onClose, onApply, onOutreach, onIntervi
         {/* ── Score breakdown ──────────────────────────── */}
         <Section title="Score Breakdown">
           <div className="space-y-4">
-            {Object.entries(job.dimensions ?? {}).map(([key, dim]) => {
-              const cfg = DIM_CFG[key] ?? { label: key, bar: '#6366f1' };
+            {Object.entries((job as unknown as Record<string, unknown>).dimensionBreakdown as Record<string, DimensionScore> ?? job.dimensions ?? {}).map(([key, dim]) => {
+              const cfg = DIM_CFG[key] ?? { label: key, bar: '#6366f1', weight: 0 };
               const d = dim as DimensionScore;
               return (
                 <div key={key}>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs text-[#888]">{cfg.label}</span>
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-[#444]">w {Math.round(d.weight * 100)}%</span>
+                      <span className="text-[10px] text-[#444]">w {Math.round(cfg.weight * 100)}%</span>
                       <span className="text-sm font-bold text-[#e0e0e0]">{d.score}</span>
                     </div>
                   </div>

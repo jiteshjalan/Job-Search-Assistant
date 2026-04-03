@@ -116,8 +116,9 @@ export default function DashboardPage() {
   const [showAllJobs,      setShowAllJobs]      = useState(false);
   const [refreshingJobId,  setRefreshingJobId]  = useState<string | null>(null);
 
-  const hasChecked  = useRef(false);
-  const kanbanRef   = useRef<KanbanData>({ outreachSent: [], applied: [], interviewing: [], offer: [], rejected: [] });
+  const hasChecked   = useRef(false);
+  const kanbanRef    = useRef<KanbanData>({ outreachSent: [], applied: [], interviewing: [], offer: [], rejected: [] });
+  const universeRef  = useRef<UniverseJob[]>([]);
 
   useEffect(() => {
     if (hasChecked.current) return;
@@ -136,6 +137,9 @@ export default function DashboardPage() {
     setKanban(initialKanban);
     setReady(true);
   }, [router]);
+
+  // Keep universeRef in sync so handleKanbanChange can look up scores without stale closure
+  useEffect(() => { universeRef.current = universe; }, [universe]);
 
   // ── Search ──────────────────────────────────────────────────────────────
 
@@ -310,7 +314,7 @@ export default function DashboardPage() {
               title:   entry.title,
               url:     entry.jobUrl ?? '',
               status:  KANBAN_STATUS_MAP[col],
-              score:   entry.totalScore,
+              score:   universeRef.current.find(j => j.id === entry.jobId)?.compositeScore,
             }),
           }).catch(() => {});
         }

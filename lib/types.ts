@@ -9,7 +9,7 @@ export interface RawJob {
   location: string;
   description: string;
   url: string;
-  source: 'serpapi' | 'serper' | 'hardcoded';
+  source: 'serpapi' | 'serper' | 'hardcoded' | 'jsearch';
   postedAt?: string;
 }
 

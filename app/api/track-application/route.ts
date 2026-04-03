@@ -108,6 +108,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'company and title are required' }, { status: 400 });
     }
 
+    if (!process.env.GOOGLE_SHEETS_ID) {
+      return NextResponse.json(
+        { error: 'GOOGLE_SHEETS_ID environment variable not configured' },
+        { status: 500 },
+      );
+    }
+
     const tokens = loadTokens();
     if (!tokens?.refresh_token) {
       return NextResponse.json(
@@ -229,7 +236,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.error('[track-application]', msg);
+    console.error('[track-application] Error:', {
+      message: msg,
+      spreadsheetId: process.env.GOOGLE_SHEETS_ID ? `${process.env.GOOGLE_SHEETS_ID.substring(0, 10)}...` : 'NOT SET',
+      stack: err instanceof Error ? err.stack : undefined,
+    });
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

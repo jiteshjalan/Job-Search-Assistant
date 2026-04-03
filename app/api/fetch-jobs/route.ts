@@ -219,6 +219,24 @@ export async function POST(req: NextRequest) {
 
     if (liveJobs.length > 0) {
       setCachedQuery(preferences, liveJobs);
+
+      // Upsert every fetched job into Google Sheets with status "New" (fire-and-forget)
+      const origin = new URL(req.url).origin;
+      void (async () => {
+        for (const job of liveJobs) {
+          await fetch(`${origin}/api/track-application`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              jobId:   job.id,
+              company: job.company,
+              title:   job.title,
+              url:     job.url,
+              status:  'New',
+            }),
+          }).catch(() => {});
+        }
+      })();
     }
 
     return NextResponse.json({

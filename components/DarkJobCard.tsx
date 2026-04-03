@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import type { UniverseJob } from '@/app/dashboard/page';
+import CVBuilder from './CVBuilder';
 
 interface Props {
   job:              UniverseJob;
@@ -30,6 +32,8 @@ export default function DarkJobCard({
   onCardClick, onScoreClick, onOutreachClick, onInterviewClick,
   onApplyClick, onRefreshClick,
 }: Props) {
+  const [confirmingApply, setConfirmingApply] = useState(false);
+  const [showCVBuilder,   setShowCVBuilder]   = useState(false);
   const st = STATUS[job.status];
   const wm = WARM[job.warmPath] ?? WARM.cold;
 
@@ -38,6 +42,7 @@ export default function DarkJobCard({
     job.compositeScore >= 55 ? 'text-amber-400' : 'text-[#666]';
 
   return (
+  <>
     <div
       className={`rounded-xl border transition-all duration-150 ${
         refreshing
@@ -112,11 +117,35 @@ export default function DarkJobCard({
           Interview
         </button>
         <button
-          onClick={onApplyClick}
-          className="text-[10px] px-2 py-1 rounded-md bg-green-500/8 text-green-500/70 hover:bg-green-500/15 hover:text-green-400 transition-colors cursor-pointer"
+          onClick={() => setShowCVBuilder(true)}
+          className="text-[10px] px-2 py-1 rounded-md bg-amber-500/8 text-amber-500/70 hover:bg-amber-500/15 hover:text-amber-400 transition-colors cursor-pointer"
         >
-          Apply
+          Build CV
         </button>
+        {confirmingApply ? (
+          <>
+            <span className="text-[10px] text-[#555] ml-1">Move to tracker?</span>
+            <button
+              onClick={() => { setConfirmingApply(false); onApplyClick(); }}
+              className="text-[10px] px-2 py-1 rounded-md bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors cursor-pointer"
+            >
+              Yes
+            </button>
+            <button
+              onClick={() => setConfirmingApply(false)}
+              className="text-[10px] px-2 py-1 rounded-md bg-white/[0.04] text-[#555] hover:text-[#888] transition-colors cursor-pointer"
+            >
+              No
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={() => setConfirmingApply(true)}
+            className="text-[10px] px-2 py-1 rounded-md bg-green-500/8 text-green-500/70 hover:bg-green-500/15 hover:text-green-400 transition-colors cursor-pointer"
+          >
+            Apply
+          </button>
+        )}
         <button
           onClick={onRefreshClick}
           disabled={refreshing}
@@ -127,5 +156,10 @@ export default function DarkJobCard({
         </button>
       </div>
     </div>
+
+    {showCVBuilder && (
+      <CVBuilder job={job} onClose={() => setShowCVBuilder(false)} />
+    )}
+  </>
   );
 }

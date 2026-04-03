@@ -116,7 +116,8 @@ export default function DashboardPage() {
   const [showAllJobs,      setShowAllJobs]      = useState(false);
   const [refreshingJobId,  setRefreshingJobId]  = useState<string | null>(null);
 
-  const hasChecked = useRef(false);
+  const hasChecked  = useRef(false);
+  const kanbanRef   = useRef<KanbanData>({ outreachSent: [], applied: [], interviewing: [], offer: [], rejected: [] });
 
   useEffect(() => {
     if (hasChecked.current) return;
@@ -130,7 +131,9 @@ export default function DashboardPage() {
     const rawName = localStorage.getItem(NAME_KEY) ?? '';
     setUserName(rawName ? toTitleCase(rawName) : 'you');
     setUniverse(loadUniverse());
-    setKanban(loadKanban());
+    const initialKanban = loadKanban();
+    kanbanRef.current = initialKanban;
+    setKanban(initialKanban);
     setReady(true);
   }, [router]);
 
@@ -282,9 +285,41 @@ export default function DashboardPage() {
     updateStatus(job.id, 'applied');
   }, [updateStatus]);
 
+  const KANBAN_STATUS_MAP: Record<keyof KanbanData, string> = {
+    outreachSent: 'Outreach Sent',
+    applied:      'Applied',
+    interviewing: 'Interviewing',
+    offer:        'Offer',
+    rejected:     'Rejected',
+  };
+
   const handleKanbanChange = useCallback((data: KanbanData) => {
+    const prev = kanbanRef.current;
+
+    // Diff each column — fire track-application for any newly placed entry
+    (Object.keys(KANBAN_STATUS_MAP) as (keyof KanbanData)[]).forEach(col => {
+      const prevIds = new Set(prev[col].map(e => e.jobId));
+      data[col].forEach(entry => {
+        if (!prevIds.has(entry.jobId)) {
+          fetch('/api/track-application', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              jobId:   entry.jobId,
+              company: entry.company,
+              title:   entry.title,
+              url:     entry.jobUrl ?? '',
+              status:  KANBAN_STATUS_MAP[col],
+            }),
+          }).catch(() => {});
+        }
+      });
+    });
+
+    kanbanRef.current = data;
     setKanban(data);
     saveKanban(data);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleRefreshJob = useCallback(async (job: UniverseJob) => {

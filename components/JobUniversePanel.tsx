@@ -25,13 +25,17 @@ export default function JobUniversePanel({
   refreshingJobId, onCardClick, onOpenScore, onOpenOutreach, onOpenInterview,
   onApply, onRefresh, onViewAll,
 }: Props) {
-  const newCount = jobs.filter(j => j.status === 'new').length;
+  // Only show jobs that have not been tracked/acted on
+  const untrackedJobs    = jobs.filter(j => j.status !== 'applied');
+  const untrackedTopJobs = topJobs.filter(j => j.status !== 'applied');
+
+  const newCount = untrackedJobs.filter(j => j.status === 'new').length;
   const isLoading = searchState === 'fetching' || searchState === 'scoring';
 
   // In search mode show all sorted by score; in default show top 3
   const display = searchMode
-    ? [...jobs].sort((a, b) => b.compositeScore - a.compositeScore)
-    : topJobs;
+    ? [...untrackedJobs].sort((a, b) => b.compositeScore - a.compositeScore)
+    : untrackedTopJobs;
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -41,9 +45,9 @@ export default function JobUniversePanel({
           <span className="text-[10px] font-semibold text-[#3a3a3a] uppercase tracking-widest">
             Job Universe
           </span>
-          {jobs.length > 0 && (
+          {untrackedJobs.length > 0 && (
             <span className="text-[10px] bg-white/[0.05] text-[#555] rounded-full px-2 py-0.5">
-              {jobs.length}
+              {untrackedJobs.length}
             </span>
           )}
           {newCount > 0 && (
@@ -53,7 +57,7 @@ export default function JobUniversePanel({
           )}
         </div>
 
-        {!searchMode && jobs.length > 3 && (
+        {!searchMode && untrackedJobs.length > 3 && (
           <button
             onClick={onViewAll}
             className="text-[11px] text-[#3a3a3a] hover:text-[#777] transition-colors cursor-pointer"
@@ -67,7 +71,7 @@ export default function JobUniversePanel({
       <div className="flex-1 overflow-y-auto px-3 py-3">
 
         {/* Empty state */}
-        {jobs.length === 0 && !isLoading && (
+        {untrackedJobs.length === 0 && !isLoading && (
           <div className="flex flex-col items-center justify-center h-full text-center py-12">
             <div className="w-10 h-10 rounded-xl bg-white/[0.03] flex items-center justify-center mb-3">
               <span className="text-lg">🎯</span>
@@ -106,12 +110,12 @@ export default function JobUniversePanel({
         )}
 
         {/* View All button */}
-        {!searchMode && jobs.length > 3 && (
+        {!searchMode && untrackedJobs.length > 3 && (
           <button
             onClick={onViewAll}
             className="w-full mt-3 py-2 border border-white/[0.06] rounded-xl text-[11px] text-[#333] hover:text-[#666] hover:border-white/[0.10] transition-all cursor-pointer"
           >
-            View all {jobs.length} jobs →
+            View all {untrackedJobs.length} jobs →
           </button>
         )}
       </div>

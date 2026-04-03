@@ -31,12 +31,15 @@ function initials(name: string): string {
 }
 
 export default function ProfilePanel() {
-  const [name,     setName]     = useState('');
-  const [headline, setHeadline] = useState('');
-  const [filename, setFilename] = useState('');
-  const [editing,  setEditing]  = useState(false);
-  const [upStatus, setUpStatus] = useState<'idle' | 'parsing' | 'done' | 'error'>('idle');
+  const [name,        setName]        = useState('');
+  const [headline,    setHeadline]    = useState('');
+  const [filename,    setFilename]    = useState('');
+  const [editing,     setEditing]     = useState(false);
+  const [upStatus,    setUpStatus]    = useState<'idle' | 'parsing' | 'done' | 'error'>('idle');
+  const [caseStudies, setCaseStudies] = useState<{ name: string; b64: string }[]>([]);
+  const [signature,   setSignature]   = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
+  const csRef   = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const cv  = localStorage.getItem('jsa_cv') ?? '';
@@ -45,7 +48,17 @@ export default function ProfilePanel() {
     setName(n || 'You');
     setHeadline(extractHeadline(cv, n));
     setFilename(localStorage.getItem('jsa_cv_filename') ?? 'CV uploaded');
+    setSignature(localStorage.getItem('emailSignature') ?? '');
+    try {
+      const stored = localStorage.getItem('jsa_case_studies');
+      if (stored) setCaseStudies(JSON.parse(stored));
+    } catch {}
   }, []);
+
+  const handleSignatureChange = (value: string) => {
+    setSignature(value);
+    localStorage.setItem('emailSignature', value);
+  };
 
   const handleReUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -66,6 +79,32 @@ export default function ProfilePanel() {
       setFilename(file.name);
       setUpStatus('done');
     } catch { setUpStatus('error'); }
+  };
+
+  const handleCaseStudyUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+    const updated = [...caseStudies];
+    for (const file of files) {
+      if (updated.length >= 15) break;
+      const b64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve((reader.result as string).split(',')[1] ?? '');
+        reader.readAsDataURL(file);
+      });
+      if (!updated.find(cs => cs.name === file.name)) {
+        updated.push({ name: file.name, b64 });
+      }
+    }
+    setCaseStudies(updated);
+    localStorage.setItem('jsa_case_studies', JSON.stringify(updated));
+    e.target.value = '';
+  };
+
+  const deleteCaseStudy = (idx: number) => {
+    const updated = caseStudies.filter((_, i) => i !== idx);
+    setCaseStudies(updated);
+    localStorage.setItem('jsa_case_studies', JSON.stringify(updated));
   };
 
   const handleReset = () => {
@@ -117,6 +156,58 @@ export default function ProfilePanel() {
               </>
             )}
           </div>
+
+          {/* Case Studies */}
+          <div className="rounded-lg border border-white/[0.07] p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] text-[#555]">Case Studies ({caseStudies.length}/15)</span>
+              {caseStudies.length < 15 && (
+                <button
+                  onClick={() => csRef.current?.click()}
+                  className="text-[10px] text-indigo-400/70 hover:text-indigo-400 transition-colors cursor-pointer"
+                >
+                  + Add PDF
+                </button>
+              )}
+            </div>
+            <input
+              ref={csRef}
+              type="file"
+              accept=".pdf"
+              multiple
+              className="hidden"
+              onChange={handleCaseStudyUpload}
+            />
+            {caseStudies.length === 0 && (
+              <p className="text-[10px] text-[#3a3a3a]">No case studies uploaded yet</p>
+            )}
+            <div className="space-y-1">
+              {caseStudies.map((cs, i) => (
+                <div key={i} className="flex items-center justify-between">
+                  <span className="text-[10px] text-[#555] truncate flex-1">{cs.name}</span>
+                  <button
+                    onClick={() => deleteCaseStudy(i)}
+                    className="text-[10px] text-red-500/40 hover:text-red-400 ml-2 cursor-pointer flex-shrink-0"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Email Signature */}
+          <div className="rounded-lg border border-white/[0.07] p-3 space-y-1.5">
+            <span className="text-[11px] text-[#555]">Email Signature</span>
+            <textarea
+              value={signature}
+              onChange={(e) => handleSignatureChange(e.target.value)}
+              placeholder="Paste your email signature here — auto-saved"
+              rows={4}
+              className="w-full text-[11px] p-2 bg-white/[0.02] border border-white/[0.06] rounded-lg text-[#888] placeholder:text-[#2e2e2e] focus:outline-none focus:border-indigo-500/20 resize-none leading-relaxed"
+            />
+          </div>
+
           <button
             onClick={handleReset}
             className="w-full text-[10px] text-red-500/50 hover:text-red-400/80 transition-colors py-1 cursor-pointer"

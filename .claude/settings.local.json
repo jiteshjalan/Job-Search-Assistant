@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(export PATH=\"/usr/local/bin:$PATH\")",
+      "Bash(npx tsc:*)",
+      "Bash(node --env-file=.env.local test-serpapi.js)",
+      "Bash(node --env-file=.env.local test-contacts.js)",
+      "Bash(node test-contacts.js)",
+      "Read(//usr/local/bin/**)",
+      "Read(//opt/homebrew/**)",
+      "Bash(/usr/local/bin/node test-contacts.js)",
+      "Bash(find /Users/jitesh/Downloads/job-search-assistant -maxdepth 1 -name tailwind.config.* -o -name next.config.* -o -name package.json)",
+      "Bash(/usr/local/bin/npx tsc:*)",
+      "Bash(export PATH=\"/opt/homebrew/bin:/usr/local/bin:$PATH\")",
+      "Bash(node node_modules/.bin/tsc --noEmit)",
+      "Bash(python3 -c \":*)"
+    ]
+  }
+}

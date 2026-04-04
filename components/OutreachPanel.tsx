@@ -245,6 +245,21 @@ export default function OutreachPanel({ job, onClose }: Props) {
         setGmailAuthUrl(data.authUrl);
       } else if (data.results) {
         setSendResults((prev) => ({ ...prev, [contactId]: data.results! }));
+        // Fix 3: track outreach send in sheet if at least one address succeeded
+        if (data.results.some(r => r.success)) {
+          fetch('/api/track-application', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              jobId:   job.id,
+              company: job.company,
+              title:   job.title,
+              url:     job.url ?? '',
+              status:  'Outreach Sent',
+              score:   job.compositeScore,
+            }),
+          }).catch(() => {});
+        }
       } else {
         setSendResults((prev) => ({
           ...prev,

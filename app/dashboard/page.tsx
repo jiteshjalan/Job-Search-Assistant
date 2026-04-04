@@ -187,6 +187,10 @@ export default function DashboardPage() {
 
       setUncachedCount(fresh ?? 0);
 
+      // Determine which jobs are genuinely new before updating state
+      const currentIds = new Set(universeRef.current.map(j => j.id));
+      const newScoredJobs = (scoredJobs as ScoredJob[]).filter(j => !currentIds.has(j.id));
+
       setUniverse(prev => {
         const existingIds = new Set(prev.map(j => j.id));
         const newJobs: UniverseJob[] = (scoredJobs as ScoredJob[])
@@ -199,6 +203,22 @@ export default function DashboardPage() {
         const merged = [...updated, ...newJobs];
         saveUniverse(merged);
         return merged;
+      });
+
+      // Fix 1: write each new job to the sheet immediately after scoring
+      newScoredJobs.forEach(j => {
+        fetch('/api/track-application', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jobId:   j.id,
+            company: j.company,
+            title:   j.title,
+            url:     j.url ?? '',
+            status:  'Tracked',
+            score:   j.compositeScore,
+          }),
+        }).catch(() => {});
       });
 
       localStorage.setItem('jsa_preferences', preferences);
@@ -287,6 +307,21 @@ export default function DashboardPage() {
     });
 
     updateStatus(job.id, 'applied');
+
+    // Fix 2: track the apply decision in the sheet
+    const trackStatus = decision === 'outreach' ? 'Outreach Sent' : 'Applied';
+    fetch('/api/track-application', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jobId:   job.id,
+        company: job.company,
+        title:   job.title,
+        url:     job.url ?? '',
+        status:  trackStatus,
+        score:   job.compositeScore,
+      }),
+    }).catch(() => {});
   }, [updateStatus]);
 
   const KANBAN_STATUS_MAP: Record<keyof KanbanData, string> = {

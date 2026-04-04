@@ -214,6 +214,20 @@ Respond ONLY with valid JSON (no markdown fences):
     // ------------------------------------------------------------------
     const cvDiffPrompt = `You are an expert CV optimiser. Your task is to parse a candidate's CV into its natural sections and return an optimised version of each section.
 
+CRITICAL INSTRUCTION — HEADER PRESERVATION:
+The very first section in your output MUST have id "header" and title "" (empty string). Both its "original" and "optimised" fields must contain exactly the following three lines verbatim, with no extra blank lines, no indentation, and no label above them:
+
+JITESH JALAN
+Product Operations & GTM Strategy
+jiteshjalan1@gmail.com | 8473037810 | LinkedIn | Portfolio
+
+Rules for this header section:
+- title must be "" (empty string) — never output "Header" or any other label
+- The three lines above must appear exactly as shown: name on line 1, title on line 2, contact details with pipe separators on line 3
+- No blank lines between the three lines
+- Do not rewrite, reorder, abbreviate, or omit any part of this block
+- It must be the first element of the sections array, before SUMMARY or anything else
+
 ## Role
 ${jobTitle} at ${company}
 

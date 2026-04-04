@@ -15,6 +15,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Job Search Assistant",
   description: "Personal job search assistant — find the right roles, understand your fit, and execute outreach fast.",
+  icons: { icon: '/favicon.svg' },
 };
 
 export default function RootLayout({

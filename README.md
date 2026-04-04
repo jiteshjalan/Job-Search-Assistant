@@ -559,17 +559,6 @@ job-search-assistant/
 
 ---
 
-## What's Next
-
-- LinkedIn automation (auto-send connection requests)
-- Email campaign tracking (opens, clicks, replies)
-- Salary negotiation toolkit
-- Company research automation
-- Interview transcript analysis
-- Cover letter generation
-
----
-
 ## Roadmap: What's Next
 
 ### Phase 1: Smarter Outreach via LinkedIn Network

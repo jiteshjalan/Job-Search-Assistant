@@ -50,19 +50,19 @@ This system solves that entire pipeline.
 
 ---
 
-## Real Proof: How I Got This Assignment
+## Real Proof: How I Got An Interview
 
-This system isn't theoretical. I tested the approach on Leena AI EIR and got the assignment. Here's exactly what I did manually:
+This system isn't theoretical. I tested the approach and got an interview. Here's exactly what I did manually:
 
 ### The Manual Process (2-3 hours)
 
 **Step 1: Research (30 min)**
 - Found the role on LinkedIn
-- Went to Leena AI website
+- Went to company website
 - Figured out the reporting structure (reports to Chief Strategy Officer)
 
 **Step 2: LinkedIn Outreach (1 hour)**
-- Used Apollo.io to find relevant people at Leena AI
+- Used Apollo.io to find relevant people at the company
 - Sent LinkedIn connection requests to 5+ employees
 - Waited for acceptance (couple of days for responses)
 
@@ -355,21 +355,6 @@ Each job scored on these dimensions (0-100 each):
 - Non-negotiable professional credential requirement
 
 ---
-
-## Example: Why Leena AI EIR Scores ~78/100
-
-Composite score: 78/100 (typically top 3-5 roles)
-
-- Functional Fit (70/100): Direct GTM execution, pricing strategy, growth operations
-- Capability Signals (65/100): Scaled from $3M to $15M ARR, PQL frameworks, forecasting
-- Requirement Match (60/100): Few specific requirements listed (typical for EIR roles)
-- Archetype Fit (75/100): Direct founder team access (strong signal)
-- Environment Match (80/100): Series B, post-PMF, enterprise B2B, growth-stage
-- Trajectory Narrative (70/100): Natural career progression
-- Strategic Alignment (60/100): Aligned with my growth goals
-
----
-
 ## Tech Stack
 
 **Frontend**: Next.js 16, React 19, TypeScript, Tailwind CSS, dnd-kit (drag-and-drop)

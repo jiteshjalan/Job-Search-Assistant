@@ -54,3 +54,4 @@ next-env.d.ts
 # OS
 .DS_Store
 Thumbs.dbgmail_tokens.json
+gmail_tokens.json
